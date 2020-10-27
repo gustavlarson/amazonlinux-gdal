@@ -11,12 +11,14 @@ WORKDIR /opt
 
 # versions of packages
 ENV \
-  LIBPNG_VERSION=1.6.36 \
-  LIBJPEG_TURBO_VERSION=2.0.1 \
+  LIBPNG_VERSION=1.6.37 \
+  LIBJPEG_TURBO_VERSION=2.0.5 \
   OPENJPEG_VERSION=2.3.1 \
   PKGCONFIG_VERSION=0.29.2 \
-  WEBP_VERSION=1.0.2 \
-  ZSTD_VERSION=1.4.0
+  WEBP_VERSION=1.1.0 \
+  ZSTD_VERSION=1.4.5 \
+  CURL_VERSION=7.73.0 \
+  NGHTTP2_VERSION=1.41.0
 
 # pkg-config
 RUN mkdir /tmp/pkg-config \
@@ -25,6 +27,22 @@ RUN mkdir /tmp/pkg-config \
    && CFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX \
    && make -j $(nproc) --silent && make install && make clean \
    && rm -rf /tmp/pkg-config
+
+# nghttp2
+RUN mkdir /tmp/nghttp2 \
+  && curl -sfL https://github.com/nghttp2/nghttp2/releases/download/v${NGHTTP2_VERSION}/nghttp2-${NGHTTP2_VERSION}.tar.gz | tar zxf - -C /tmp/nghttp2 --strip-components=1 \
+  && cd /tmp/nghttp2 \
+  && ./configure --enable-lib-only --prefix=$PREFIX \
+  && make -j $(nproc) --silent && make install && make clean \
+  && rm -rf /tmp/nghttp2
+
+# libcurl
+RUN mkdir /tmp/libcurl \
+  && curl -sfL https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz | tar zxf - -C /tmp/libcurl --strip-components=1 \
+  && cd /tmp/libcurl \
+  && ./configure --disable-manual --disable-cookies --with-nghttp2=$PREFIX --prefix=$PREFIX \
+  && make -j $(nproc) --silent && make install && make clean \
+  && rm -rf /tmp/libcurl
 
 # png
 RUN mkdir /tmp/png \
@@ -68,9 +86,9 @@ RUN mkdir /tmp/zstd \
 
 # OSGEO
 ENV \
-  GEOS_VERSION=3.7.2 \
-  GDAL_VERSION=3.0.1 \
-  PROJ_VERSION=6.1.1
+  GEOS_VERSION=3.8.1 \
+  GDAL_VERSION=3.1.4 \
+  PROJ_VERSION=6.2.1
 
 # proj
 RUN mkdir /tmp/proj \
@@ -99,7 +117,7 @@ RUN cd /tmp/gdal \
       --prefix=$PREFIX \
       --with-proj=$PREFIX \
       --with-geos=$PREFIX/bin/geos-config \
-      --with-curl \
+      --with-curl=$PREFIX/bin/curl-config \
       --with-openjpeg \
       --with-png \
       --with-jpeg=$PREFIX \
@@ -117,7 +135,6 @@ RUN cd /tmp/gdal \
       --without-expat \
       --without-fme \
       --without-freexl \
-      --without-gif \
       --without-gif \
       --without-gnm \
       --without-grass \

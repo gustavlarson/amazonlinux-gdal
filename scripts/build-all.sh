@@ -24,11 +24,11 @@ build-layer () {
 }
 
 # GDAL_VERSIONS="2.2 3.0 master"
-GDAL_VERSIONS="3.0"
-PYTHON_VERSIONS="3.6 3.7"
+GDAL_VERSIONS="3.1.4"
+PYTHON_VERSIONS="3.8"
 for GDAL_VERSION in $GDAL_VERSIONS; do
   echo "Building image for gdal ${GDAL_VERSION}"
-	docker build -f base/gdal${GDAL_VERSION}/Dockerfile -t remotepixel/amazonlinux:gdal${GDAL_VERSION} .
+	docker build -f base/gdal3.0/Dockerfile -t remotepixel/amazonlinux:gdal${GDAL_VERSION} .
   for PYTHON_VERSION in $PYTHON_VERSIONS; do
     build-layer "build"
     build-layer "rasterio"
